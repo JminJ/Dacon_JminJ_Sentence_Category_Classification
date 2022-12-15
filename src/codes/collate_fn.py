@@ -25,16 +25,16 @@ class MyCustomCollateFN:
             label_list.append(b.loc["label"])
 
         toked_result = self.tokenizer(text_list, return_tensors='pt', padding = 'longest')
-        category_batch_tensor = torch.tensor(category_list).int()
-        sentiment_batch_tensor = torch.tensor(sentiment_list).int()
-        tense_batch_tensor = torch.tensor(tense_list).int()
-        certainty_batch_tensor = torch.tensor(certainty_list).int()
-        label_batch_tensor = torch.tensor(label_list).int()
+        category_batch_tensor = torch.tensor(category_list).long()
+        sentiment_batch_tensor = torch.tensor(sentiment_list).long()
+        tense_batch_tensor = torch.tensor(tense_list).long()
+        certainty_batch_tensor = torch.tensor(certainty_list).long()
+        label_batch_tensor = torch.tensor(label_list).long()
 
         return_dict = {
             "input_ids" : toked_result["input_ids"].to(self.device),
             "attention_mask" : toked_result["attention_mask"].to(self.device),
-            "catetory" : category_batch_tensor.to(self.device),
+            "category" : category_batch_tensor.to(self.device),
             "sentiment" : sentiment_batch_tensor.to(self.device),
             "tense" : tense_batch_tensor.to(self.device),
             "certainty" : certainty_batch_tensor.to(self.device),

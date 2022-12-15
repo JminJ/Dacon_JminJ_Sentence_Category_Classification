@@ -13,8 +13,7 @@ class SentenceCategoryDataset(Dataset):
         return len(self.dataset)
     
     def __getitem__(self, index)->pd.Series:
-        temp_index_data = self.dataset.iloc[index]
-        temp_index_data = temp_index_data.loc[:, ["문장", "유형", "극성", "시제", "확실성", "label"]]
+        temp_index_data = self.dataset.loc[index, ["문장", "유형", "극성", "시제", "확실성", "label"]]
 
         return temp_index_data
 
