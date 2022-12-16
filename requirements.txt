@@ -1,0 +1,6 @@
+pandas==1.4.2
+numpy==1.23.4
+pytorch==1.13.0
+transformers==4.24.0
+wandb==0.13.7
+scikit-learn==1.0.2
