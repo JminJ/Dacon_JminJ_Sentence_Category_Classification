@@ -1,4 +1,3 @@
-import pandas as pd
 import torch
 from transformers import AutoTokenizer
 from typing import Dict, List
