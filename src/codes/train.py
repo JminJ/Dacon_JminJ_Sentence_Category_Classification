@@ -19,6 +19,7 @@ from operation import ClassifierOperation
 class Trainer:
     def __init__(self, base_ckpt:str, device:str, save_dir_path:str, args:argparse.Namespace):
         self.args = args
+        self.device = device
         self.save_dir_path = save_dir_path
         self._make_save_dir(save_dir_path = self.save_dir_path)
 
@@ -32,7 +33,7 @@ class Trainer:
         self.train_dataloader = DataLoader(train_Dataset, batch_size=args.train_batch_size, collate_fn=custom_collate_fn)
         self.valid_dataloader = DataLoader(valid_Dataset, batch_size=args.valid_batch_size, collate_fn=custom_collate_fn)
 
-        classifier = SentenceCategoryClassifier(base_ckpt=base_ckpt, drop_rate=0.2, device=device) 
+        classifier = SentenceCategoryClassifier(base_ckpt=base_ckpt, drop_rate=0.2) 
         loss_fn_dict = self._define_each_loss_functions()  
 
         self.operation_cls = ClassifierOperation(classifier = classifier, loss_functions=loss_fn_dict, mode="train")
@@ -76,7 +77,7 @@ class Trainer:
         tense_weight = torch.tensor([max(tense_cnt)/tense_cnt[i] for i in range(len(tense_cnt))]).float()
         certainty_weight = torch.tensor([max(certainty_cnt)/certainty_cnt[i] for i in range(len(certainty_cnt))]).float()
 
-        return category_weight, sentiment_weight, tense_weight, certainty_weight
+        return category_weight.to(self.device), sentiment_weight.to(self.device), tense_weight.to(self.device), certainty_weight.to(self.device)
 
     def _define_each_loss_functions(self)->Dict:
     

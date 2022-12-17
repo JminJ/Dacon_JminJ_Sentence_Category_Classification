@@ -4,10 +4,9 @@ from transformers import AutoModel
 from typing import Dict, Tuple
 
 class SentenceCategoryClassifier(nn.Module):
-    def __init__(self, base_ckpt:str, drop_rate:float, device:str):
+    def __init__(self, base_ckpt:str, drop_rate:float):
         super(SentenceCategoryClassifier, self).__init__()
         self.base_model = AutoModel.from_pretrained(base_ckpt)
-        self.base_model.to(device)
 
         self.category_layer = nn.Linear(256, 4)
         self.sentiment_layer = nn.Linear(256, 3)
