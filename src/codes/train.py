@@ -181,7 +181,7 @@ class Trainer:
         valid_examples = 0
 
         with torch.no_grad():
-            for _, batch in self.valid_dataloader:
+            for _, batch in enumerate(self.valid_dataloader, 0):
                 temp_step_loss, temp_step_each_correct_cnts, temp_step_each_f1_scores, temp_step_full_label_f1_score = self.operation_cls.forward(input_batch=batch)
 
                 valid_loss += temp_step_loss.item()
