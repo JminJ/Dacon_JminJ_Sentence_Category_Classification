@@ -138,7 +138,7 @@ class Trainer:
         for _, batch in enumerate(self.train_dataloader, 0):
             temp_step_loss, temp_step_each_correct_cnts, temp_step_each_f1_scores, temp_step_full_label_f1_score = self.operation_cls(input_batch=batch)
 
-            train_loss += temp_step_loss
+            train_loss += temp_step_loss.item()
             train_each_corrects = [train_each_corrects[k] + temp_step_each_correct_cnts[k] for k in train_each_corrects.keys()]
             train_each_f1_scores = [train_each_f1_scores[k] + temp_step_each_f1_scores[k] for k in train_each_f1_scores.keys()]
             train_full_label_f1_score += temp_step_full_label_f1_score
@@ -179,7 +179,7 @@ class Trainer:
             for _, batch in self.valid_dataloader:
                 temp_step_loss, temp_step_each_correct_cnts, temp_step_each_f1_scores, temp_step_full_label_f1_score = self.operation_cls(input_batch=batch)
 
-                valid_loss += temp_step_loss
+                valid_loss += temp_step_loss.item()
                 valid_each_corrects = [valid_each_corrects[k] + temp_step_each_correct_cnts[k] for k in valid_each_corrects.keys()]
                 valid_each_f1_scores = [valid_each_f1_scores[k] + temp_step_each_f1_scores[k] for k in valid_each_f1_scores.keys()]
                 valid_full_label_f1_score += temp_step_full_label_f1_score
@@ -219,7 +219,4 @@ class Trainer:
             pprint.pprint('\n', valid_each_corrects, '\n')
 
         print(f"\n\n ----------------------\nTrain Operation Is Done..")
-
-
-
-
+        
