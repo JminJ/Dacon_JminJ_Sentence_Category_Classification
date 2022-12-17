@@ -74,10 +74,10 @@ class Trainer:
         tense_unique, tense_cnt=np.unique(self.train_pd_dataset.loc[:, "시제"], return_counts=True)
         certainty_unique, certainty_cnt=np.unique(self.train_pd_dataset.loc[:, "확실성"], return_counts=True)
 
-        category_weight = torch.tensor([max(category_cnt)/category_cnt[i] for i in range(len(category_cnt))]).float()
-        sentiment_weight = torch.tensor([max(sentiment_cnt)/sentiment_cnt[i] for i in range(len(sentiment_cnt))]).float()
-        tense_weight = torch.tensor([max(tense_cnt)/tense_cnt[i] for i in range(len(tense_cnt))]).float()
-        certainty_weight = torch.tensor([max(certainty_cnt)/certainty_cnt[i] for i in range(len(certainty_cnt))]).float()
+        category_weight = torch.tensor([1.0 + np.log(max(category_cnt)/category_cnt[i]) for i in range(len(category_cnt))]).float()
+        sentiment_weight = torch.tensor([1.0 + np.log(max(sentiment_cnt)/sentiment_cnt[i]) for i in range(len(sentiment_cnt))]).float()
+        tense_weight = torch.tensor([1.0 + np.log(max(tense_cnt)/tense_cnt[i]) for i in range(len(tense_cnt))]).float()
+        certainty_weight = torch.tensor([1.0 + np.log(max(certainty_cnt)/certainty_cnt[i]) for i in range(len(certainty_cnt))]).float()
 
         return category_weight.to(self.device), sentiment_weight.to(self.device), tense_weight.to(self.device), certainty_weight.to(self.device)
 
