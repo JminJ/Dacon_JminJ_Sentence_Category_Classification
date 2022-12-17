@@ -67,7 +67,7 @@ class ClassifierOperation:
 
             temp_full_label = f"{self.category_label_str[temp_category_label]}-{self.sentiment_label_str[temp_sentiment_label]}-{self.tense_label_str[temp_tense_label]}-{self.certainty_label_str[temp_certainty_label]}"
 
-            print(f"full-label : {temp_full_label}")
+            # print(f"full-label : {temp_full_label}")
             full_label_list.append(temp_full_label)
 
         return full_label_list

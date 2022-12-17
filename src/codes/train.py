@@ -149,10 +149,10 @@ class Trainer:
 
             wandb.log({
                 "train_loss" : train_loss / train_steps,
-                "train_category_f1_score" : train_each_f1_scores["category"] / train_examples,
-                "train_sentiment_f1_score" : train_each_f1_scores["sentiment"] / train_examples,
-                "train_tense_f1_score" : train_each_f1_scores["tense"] / train_examples,
-                "train_certainty_f1_score" : train_each_f1_scores["certainty"] / train_examples,
+                "train_category_f1_score" : train_each_f1_scores[0] / train_examples,
+                "train_sentiment_f1_score" : train_each_f1_scores[1] / train_examples,
+                "train_tense_f1_score" : train_each_f1_scores[2] / train_examples,
+                "train_certainty_f1_score" : train_each_f1_scores[3] / train_examples,
                 "train_full_label_f1_score" : train_full_label_f1_score / train_examples
             })
 
