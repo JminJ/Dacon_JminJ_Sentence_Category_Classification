@@ -45,7 +45,7 @@ class Trainer:
         self.learning_rate_schedular = get_cosine_schedule_with_warmup(optimizer=self.optimizer, num_warmup_steps=num_warmup_steps, num_training_steps=num_total_steps)
 
         self._wandb_init()
-        
+
     def _make_save_dir(self, save_dir_path:str):
         if not os.path.exists(save_dir_path):
             os.makedirs(save_dir_path)
@@ -142,8 +142,10 @@ class Trainer:
             temp_step_loss, temp_step_each_correct_cnts, temp_step_each_f1_scores, temp_step_full_label_f1_score = self.operation_cls.forward(input_batch=batch)
 
             train_loss += temp_step_loss.item()
-            train_each_corrects = [train_each_corrects[k] + temp_step_each_correct_cnts[k] for k in train_each_corrects.keys()]
-            train_each_f1_scores = [train_each_f1_scores[k] + temp_step_each_f1_scores[k] for k in train_each_f1_scores.keys()]
+            for k in train_each_corrects.keys():
+                train_each_corrects[k] += temp_step_each_correct_cnts[k]
+            for k in train_each_f1_scores.keys():
+                train_each_f1_scores[k] += temp_step_each_f1_scores[k]
             train_full_label_f1_score += temp_step_full_label_f1_score
 
             train_steps += 1
@@ -151,10 +153,10 @@ class Trainer:
 
             wandb.log({
                 "train_loss" : train_loss / train_steps,
-                "train_category_f1_score" : train_each_f1_scores[0] / train_examples,
-                "train_sentiment_f1_score" : train_each_f1_scores[1] / train_examples,
-                "train_tense_f1_score" : train_each_f1_scores[2] / train_examples,
-                "train_certainty_f1_score" : train_each_f1_scores[3] / train_examples,
+                "train_category_f1_score" : train_each_f1_scores["category"] / train_examples,
+                "train_sentiment_f1_score" : train_each_f1_scores["sentiment"] / train_examples,
+                "train_tense_f1_score" : train_each_f1_scores["tense"] / train_examples,
+                "train_certainty_f1_score" : train_each_f1_scores["certainty"] / train_examples,
                 "train_full_label_f1_score" : train_full_label_f1_score / train_examples
             })
 
@@ -183,8 +185,10 @@ class Trainer:
                 temp_step_loss, temp_step_each_correct_cnts, temp_step_each_f1_scores, temp_step_full_label_f1_score = self.operation_cls.forward(input_batch=batch)
 
                 valid_loss += temp_step_loss.item()
-                valid_each_corrects = [valid_each_corrects[k] + temp_step_each_correct_cnts[k] for k in valid_each_corrects.keys()]
-                valid_each_f1_scores = [valid_each_f1_scores[k] + temp_step_each_f1_scores[k] for k in valid_each_f1_scores.keys()]
+                for k in valid_each_corrects.keys():
+                    valid_each_corrects[k] += temp_step_each_correct_cnts[k]
+                for k in valid_each_f1_scores.keys():
+                    valid_each_f1_scores[k] += temp_step_each_f1_scores[k]
                 valid_full_label_f1_score += temp_step_full_label_f1_score
 
                 valid_steps += 1
