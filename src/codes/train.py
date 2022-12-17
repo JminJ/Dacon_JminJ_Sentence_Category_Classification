@@ -43,7 +43,7 @@ class Trainer:
         num_warmup_steps = self._calc_num_warmup_step(warmup_rate=args.warmup_rate, num_total_steps=num_total_steps)
         self.learning_rate_schedular = get_cosine_schedule_with_warmup(optimizer=self.optimizer, num_warmup_steps=num_warmup_steps, num_training_steps=num_total_steps)
 
-    def _make_save_dir(save_dir_path:str):
+    def _make_save_dir(self, save_dir_path:str):
         if not os.path.exists(save_dir_path):
             os.makedirs(save_dir_path)
             print(f"MAKE : {save_dir_path}")
