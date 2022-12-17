@@ -49,8 +49,7 @@ class ClassifierOperation:
 
     def _calc_f1_score(self, max_index_each_data:List, target_label:torch.Tensor):
         target_label = target_label.detach().cpu().numpy()
-        print(max_index_each_data)
-        print(target_label)
+        
         weighted_f1_score_value = f1_score(target_label, max_index_each_data, average="weighted")
 
         return weighted_f1_score_value
