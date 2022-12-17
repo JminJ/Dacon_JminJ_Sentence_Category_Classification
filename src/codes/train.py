@@ -36,7 +36,7 @@ class Trainer:
         loss_fn_dict = self._define_each_loss_functions()  
 
         self.operation_cls = ClassifierOperation(classifier = classifier, loss_functions=loss_fn_dict, mode="train")
-
+        self.operation_cls.classifier.to(device)
         self.optimizer = torch.optim.RAdam(self.operation_cls.classifier.parameters(), lr = args.learning_rate, weight_decay=0.15) # weight_decay는 고정 값으로 사용한다
         
         num_total_steps = len(self.train_dataloader) * args.epochs
