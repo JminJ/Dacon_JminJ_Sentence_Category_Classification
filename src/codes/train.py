@@ -66,10 +66,10 @@ class Trainer:
         return num_warmup_steps
 
     def __calc_loss_weight(self)->Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
-        category_unique, category_cnt=np.unique(self.train_pd_dataset.loc[:, "category"], return_counts=True)
-        sentiment_unique, sentiment_cnt=np.unique(self.train_pd_dataset.loc[:, "sentiment"], return_counts=True)
-        tense_unique, tense_cnt=np.unique(self.train_pd_dataset.loc[:, "tense"], return_counts=True)
-        certainty_unique, certainty_cnt=np.unique(self.train_pd_dataset.loc[:, "certainty"], return_counts=True)
+        category_unique, category_cnt=np.unique(self.train_pd_dataset.loc[:, "유형"], return_counts=True)
+        sentiment_unique, sentiment_cnt=np.unique(self.train_pd_dataset.loc[:, "극성"], return_counts=True)
+        tense_unique, tense_cnt=np.unique(self.train_pd_dataset.loc[:, "시제"], return_counts=True)
+        certainty_unique, certainty_cnt=np.unique(self.train_pd_dataset.loc[:, "확실성"], return_counts=True)
 
         category_weight = torch.tensor([max(category_cnt)/category_cnt[i] for i in range(len(category_cnt))]).float()
         sentiment_weight = torch.tensor([max(sentiment_cnt)/sentiment_cnt[i] for i in range(len(sentiment_cnt))]).float()
