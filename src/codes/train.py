@@ -223,7 +223,7 @@ class Trainer:
             pprint.pprint(valid_result)
             for k in valid_each_corrects.keys():
                 valid_each_corrects[k] = valid_each_corrects[k] / valid_examples
-            pprint.pprint('\n', valid_each_corrects, '\n')
+            pprint.pprint(f"\n{valid_each_corrects}\n")
 
         print(f"\n\n ----------------------\nTrain Operation Is Done..")
         
