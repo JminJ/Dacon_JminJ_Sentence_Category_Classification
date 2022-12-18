@@ -144,10 +144,11 @@ class Trainer:
         train_loss, train_each_corrects, train_each_f1_scores, train_full_label_f1_score = self._define_to_save_each_data()
         train_steps, train_examples = 0, 0
 
-        for i, batch in enumerate(self.train_dataloader, 0):
+        for _, batch in enumerate(self.train_dataloader, 0):
+
             temp_step_loss, temp_step_each_correct_cnts, temp_step_each_f1_scores, temp_step_full_label_f1_score = self.operation_cls.forward(input_batch=batch)
 
-            train_loss += temp_step_loss.item() / self.args.iters_to_accumulate
+            train_loss += temp_step_loss.item()
             for k in train_each_corrects.keys():
                 train_each_corrects[k] += temp_step_each_correct_cnts[k]
             for k in train_each_f1_scores.keys():
@@ -167,8 +168,42 @@ class Trainer:
             })
 
             ## update
+            self.optimizer.zero_grad()
+            temp_step_loss.backward()
+            self.optimizer.step()
+            self.learning_rate_schedular.step()
 
-            self.gradscaler.scale(train_loss).backward()
+    def _train_with_accumulation(self):
+        self.operation_cls.classifier.train()
+
+        train_loss, train_each_corrects, train_each_f1_scores, train_full_label_f1_score = self._define_to_save_each_data()
+        train_steps, train_examples = 0, 0
+
+        for i, batch in enumerate(self.train_dataloader, 0):
+            with torch.cuda.amp.autocast():
+                temp_step_loss, temp_step_each_correct_cnts, temp_step_each_f1_scores, temp_step_full_label_f1_score = self.operation_cls.forward(input_batch=batch)
+
+            train_loss += temp_step_loss.item()
+            for k in train_each_corrects.keys():
+                train_each_corrects[k] += temp_step_each_correct_cnts[k]
+            for k in train_each_f1_scores.keys():
+                train_each_f1_scores[k] += temp_step_each_f1_scores[k]
+            train_full_label_f1_score += temp_step_full_label_f1_score
+
+            train_steps += 1
+            train_examples += len(batch["label"])
+
+            wandb.log({
+                "train_loss" : train_loss / train_steps,
+                "train_category_f1_score" : train_each_f1_scores["category"] / train_examples,
+                "train_sentiment_f1_score" : train_each_f1_scores["sentiment"] / train_examples,
+                "train_tense_f1_score" : train_each_f1_scores["tense"] / train_examples,
+                "train_certainty_f1_score" : train_each_f1_scores["certainty"] / train_examples,
+                "train_full_label_f1_score" : train_full_label_f1_score / train_examples
+            })
+
+            ## update
+            self.gradscaler.scale(temp_step_loss/self.args.iters_to_accumulate).backward()
             if (i + 1) % self.args.iters_to_accumulate == 0:
                 self.optimizer.zero_grad()
                 self.gradscaler.step(self.optimizer)
@@ -222,7 +257,11 @@ class Trainer:
 
     def forward(self):
         for epoch in range(self.args.epochs):
-            self._train()
+            if self.args.use_base_model:
+                self._train_with_accumulation()
+            else:
+                self._train()
+                
             self._model_ckpt_save(epoch=epoch)
             valid_examples, valid_each_corrects, valid_result = self._valid()
 
