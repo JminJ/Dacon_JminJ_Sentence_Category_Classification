@@ -32,8 +32,8 @@ class Trainer:
         valid_Dataset = SentenceCategoryDataset(self.valid_pd_dataset)
         custom_collate_fn = MyCustomCollateFN(base_ckpt=base_ckpt, device=device)     
         
-        self.train_dataloader = DataLoader(train_Dataset, batch_size=args.train_batch_size, collate_fn=custom_collate_fn)
-        self.valid_dataloader = DataLoader(valid_Dataset, batch_size=args.valid_batch_size, collate_fn=custom_collate_fn)
+        self.train_dataloader = DataLoader(train_Dataset, batch_size=args.train_batch_size, collate_fn=custom_collate_fn, shuffle=True)
+        self.valid_dataloader = DataLoader(valid_Dataset, batch_size=args.valid_batch_size, collate_fn=custom_collate_fn, shuffle=False)
 
         if args.use_base_model==False:
             classifier = electra_cls_small(base_ckpt=base_ckpt, drop_rate=0.2) 
