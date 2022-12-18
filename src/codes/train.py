@@ -7,6 +7,7 @@ from typing import Dict, Tuple, List
 
 import wandb
 import torch
+from torch.cuda.amp import GradScaler
 import torch.nn as nn
 from torch.utils.data import DataLoader
 from transformers import get_cosine_schedule_with_warmup
@@ -48,6 +49,7 @@ class Trainer:
         num_warmup_steps = self._calc_num_warmup_step(warmup_rate=args.warmup_rate, num_total_steps=num_total_steps)
         self.learning_rate_schedular = get_cosine_schedule_with_warmup(optimizer=self.optimizer, num_warmup_steps=num_warmup_steps, num_training_steps=num_total_steps)
 
+        self.gradscaler = GradScaler()
         self._wandb_init()
 
     def _make_save_dir(self, save_dir_path:str):
@@ -142,10 +144,10 @@ class Trainer:
         train_loss, train_each_corrects, train_each_f1_scores, train_full_label_f1_score = self._define_to_save_each_data()
         train_steps, train_examples = 0, 0
 
-        for _, batch in enumerate(self.train_dataloader, 0):
+        for i, batch in enumerate(self.train_dataloader, 0):
             temp_step_loss, temp_step_each_correct_cnts, temp_step_each_f1_scores, temp_step_full_label_f1_score = self.operation_cls.forward(input_batch=batch)
 
-            train_loss += temp_step_loss.item()
+            train_loss += temp_step_loss.item() / self.args.iters_to_accumulate
             for k in train_each_corrects.keys():
                 train_each_corrects[k] += temp_step_each_correct_cnts[k]
             for k in train_each_f1_scores.keys():
@@ -165,12 +167,13 @@ class Trainer:
             })
 
             ## update
-            self.optimizer.zero_grad()
-            temp_step_loss.backward()
-            self.optimizer.step()
-            self.learning_rate_schedular.step()
 
-
+            self.gradscaler.scale(train_loss).backward()
+            if (i + 1) % self.args.iters_to_accumulate == 0:
+                self.optimizer.zero_grad()
+                self.gradscaler.step(self.optimizer)
+                self.gradscaler.update()
+                self.learning_rate_schedular.step()
     '''
         Return
             - valid_examples(int) : forward에서 corrects 결과를 출력하기 위한 인자
