@@ -45,9 +45,10 @@ class Trainer:
         self.operation_cls.classifier.to(device)
         self.optimizer = torch.optim.RAdam(self.operation_cls.classifier.parameters(), lr = args.learning_rate, weight_decay=0.15) # weight_decay는 고정 값으로 사용한다
         
-        num_total_steps = len(self.train_dataloader) * args.epochs
-        num_warmup_steps = self._calc_num_warmup_step(warmup_rate=args.warmup_rate, num_total_steps=num_total_steps)
-        self.learning_rate_schedular = get_cosine_schedule_with_warmup(optimizer=self.optimizer, num_warmup_steps=num_warmup_steps, num_training_steps=num_total_steps)
+        if self.args.use_lr_warup > 0:
+            num_total_steps = len(self.train_dataloader) * args.epochs
+            num_warmup_steps = self._calc_num_warmup_step(warmup_rate=args.warmup_rate, num_total_steps=num_total_steps)
+            self.learning_rate_schedular = get_cosine_schedule_with_warmup(optimizer=self.optimizer, num_warmup_steps=num_warmup_steps, num_training_steps=num_total_steps)
 
         self.gradscaler = GradScaler()
         self._wandb_init()
@@ -171,7 +172,8 @@ class Trainer:
             self.optimizer.zero_grad()
             temp_step_loss.backward()
             self.optimizer.step()
-            self.learning_rate_schedular.step()
+            if self.args.use_lr_warup > 0:
+                self.learning_rate_schedular.step()
 
     def _train_with_accumulation(self):
         self.operation_cls.classifier.train()
@@ -208,7 +210,8 @@ class Trainer:
                 self.optimizer.zero_grad()
                 self.gradscaler.step(self.optimizer)
                 self.gradscaler.update()
-                self.learning_rate_schedular.step()
+                if self.args.use_lr_warup > 0:
+                    self.learning_rate_schedular.step()
     '''
         Return
             - valid_examples(int) : forward에서 corrects 결과를 출력하기 위한 인자
