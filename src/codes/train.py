@@ -11,7 +11,8 @@ import torch.nn as nn
 from torch.utils.data import DataLoader
 from transformers import get_cosine_schedule_with_warmup
 
-from electra_classifier import SentenceCategoryClassifier
+from electra_classifier import SentenceCategoryClassifier as electra_cls_small
+from electra_classifier_base_ver import SentenceCategoryClassifier as electra_cls_base
 from custom_dataset import SentenceCategoryDataset
 from collate_fn import MyCustomCollateFN
 from operation import ClassifierOperation
@@ -33,7 +34,10 @@ class Trainer:
         self.train_dataloader = DataLoader(train_Dataset, batch_size=args.train_batch_size, collate_fn=custom_collate_fn)
         self.valid_dataloader = DataLoader(valid_Dataset, batch_size=args.valid_batch_size, collate_fn=custom_collate_fn)
 
-        classifier = SentenceCategoryClassifier(base_ckpt=base_ckpt, drop_rate=0.2) 
+        if args.use_base_model==False:
+            classifier = electra_cls_small(base_ckpt=base_ckpt, drop_rate=0.2) 
+        else:
+            classifier = electra_cls_base(base_ckpt=base_ckpt, drop_rate=0.2) 
         loss_fn_dict = self._define_each_loss_functions()  
 
         self.operation_cls = ClassifierOperation(classifier = classifier, loss_functions=loss_fn_dict, mode="train")
