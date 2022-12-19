@@ -122,7 +122,7 @@ class Trainer:
             return loss_fn_dict
 
     def _define_to_save_each_data(self)->Tuple[float, Dict, Dict, float]:
-        loss_save_value = 0
+        loss_save_value = 0.0
         correct_cnt_save_dict = {
             "category" : 0,
             "sentiment" : 0,
@@ -161,11 +161,11 @@ class Trainer:
 
             wandb.log({
                 "train_loss" : train_loss / train_steps,
-                "train_category_f1_score" : train_each_f1_scores["category"] / train_examples,
-                "train_sentiment_f1_score" : train_each_f1_scores["sentiment"] / train_examples,
-                "train_tense_f1_score" : train_each_f1_scores["tense"] / train_examples,
-                "train_certainty_f1_score" : train_each_f1_scores["certainty"] / train_examples,
-                "train_full_label_f1_score" : train_full_label_f1_score / train_examples
+                "train_category_f1_score" : train_each_f1_scores["category"]/train_steps,
+                "train_sentiment_f1_score" : train_each_f1_scores["sentiment"]/train_steps,
+                "train_tense_f1_score" : train_each_f1_scores["tense"]/train_steps,
+                "train_certainty_f1_score" : train_each_f1_scores["certainty"]/train_steps,
+                "train_full_label_f1_score" : train_full_label_f1_score/train_steps
             })
 
             ## update
@@ -197,21 +197,21 @@ class Trainer:
 
             wandb.log({
                 "train_loss" : train_loss / train_steps,
-                "train_category_f1_score" : train_each_f1_scores["category"] / train_examples,
-                "train_sentiment_f1_score" : train_each_f1_scores["sentiment"] / train_examples,
-                "train_tense_f1_score" : train_each_f1_scores["tense"] / train_examples,
-                "train_certainty_f1_score" : train_each_f1_scores["certainty"] / train_examples,
-                "train_full_label_f1_score" : train_full_label_f1_score / train_examples
+                "train_category_f1_score" : train_each_f1_scores["category"]/ train_steps,
+                "train_sentiment_f1_score" : train_each_f1_scores["sentiment"] / train_steps,
+                "train_tense_f1_score" : train_each_f1_scores["tense"] / train_steps,
+                "train_certainty_f1_score" : train_each_f1_scores["certainty"] / train_steps,
+                "train_full_label_f1_score" : train_full_label_f1_score / train_steps
             })
 
             ## update
             self.gradscaler.scale(temp_step_loss/self.args.iters_to_accumulate).backward()
             if (i + 1) % self.args.iters_to_accumulate == 0:
-                self.optimizer.zero_grad()
                 self.gradscaler.step(self.optimizer)
                 self.gradscaler.update()
                 if self.args.warmup_rate > 0:
                     self.learning_rate_schedular.step()
+                self.optimizer.zero_grad()
     '''
         Return
             - valid_examples(int) : forward에서 corrects 결과를 출력하기 위한 인자
@@ -241,11 +241,11 @@ class Trainer:
             
             valid_results = {
                 "valid_loss" : valid_loss / valid_steps,
-                "valid_category_f1_score" : valid_each_f1_scores["category"] / valid_examples,
-                "valid_sentiment_f1_score" : valid_each_f1_scores["sentiment"] / valid_examples,
-                "valid_tense_f1_score" : valid_each_f1_scores["tense"] / valid_examples,
-                "valid_certainty_f1_score" : valid_each_f1_scores["certainty"] / valid_examples,
-                "valid_full_label_f1_score" : valid_full_label_f1_score / valid_examples
+                "valid_category_f1_score" : valid_each_f1_scores["category"] / valid_steps,
+                "valid_sentiment_f1_score" : valid_each_f1_scores["sentiment"] / valid_steps,
+                "valid_tense_f1_score" : valid_each_f1_scores["tense"] / valid_steps,
+                "valid_certainty_f1_score" : valid_each_f1_scores["certainty"] / valid_steps,
+                "valid_full_label_f1_score" : valid_full_label_f1_score / valid_steps
             }
             wandb.log(valid_results)
 
