@@ -267,7 +267,7 @@ class Trainer:
 
     def forward(self):
         for epoch in range(self.args.epochs):
-            if self.args.use_base_model:
+            if self.args.use_amp:
                 self._train_with_accumulation()
             else:
                 self._train()
