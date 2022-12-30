@@ -13,7 +13,6 @@ class MyCustomCollateFN:
         sentiment_list = []
         tense_list = []
         certainty_list = []
-        label_list = []
 
         for b in batch:
             text_list.append(b.loc["문장"])
@@ -21,14 +20,12 @@ class MyCustomCollateFN:
             sentiment_list.append(b.loc["극성"])
             tense_list.append(b.loc["시제"])
             certainty_list.append(b.loc["확실성"])
-            label_list.append(b.loc["label"])
 
         toked_result = self.tokenizer(text_list, return_tensors='pt', padding = 'longest')
         category_batch_tensor = torch.tensor(category_list).long()
         sentiment_batch_tensor = torch.tensor(sentiment_list).long()
         tense_batch_tensor = torch.tensor(tense_list).long()
         certainty_batch_tensor = torch.tensor(certainty_list).long()
-        label_batch_tensor = torch.tensor(label_list).long()
 
         return_dict = {
             "input_ids" : toked_result["input_ids"].to(self.device),
@@ -36,8 +33,7 @@ class MyCustomCollateFN:
             "category" : category_batch_tensor.to(self.device),
             "sentiment" : sentiment_batch_tensor.to(self.device),
             "tense" : tense_batch_tensor.to(self.device),
-            "certainty" : certainty_batch_tensor.to(self.device),
-            "label" : label_batch_tensor.to(self.device)
+            "certainty" : certainty_batch_tensor.to(self.device)
         }
 
         return return_dict

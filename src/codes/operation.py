@@ -112,7 +112,7 @@ class ClassifierOperation:
     def forward(self, input_batch:Dict)->Tuple:
         output_list = list(self.classifier(input_batch))
         loss_fn_keys = list(self.loss_functions.keys())
-        batch_size = len(input_batch["label"])
+        batch_size = len(input_batch["category"])
 
         all_loss_result = []
         correct_cnt_each_label, f1_score_each_label, correct_each_labels, false_each_labels, each_label_max_index_datas = self._define_all_return_argumetns()
