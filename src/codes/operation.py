@@ -140,17 +140,10 @@ class ClassifierOperation:
             f1_score_each_label[temp_loss_key_name] += temp_label_f1_score
             # print(f"temp_label_f1_score : {temp_label_f1_score}")
 
-        full_label_list = self._make_full_label(each_label_max_index_datas=each_label_max_index_datas, batch_size = batch_size)
-        # print(f"\n\nfull_label_list : {full_label_list}")
-        converted_full_label_list = [self.full_label_str.index(f) for f in full_label_list]
-        # print(converted_full_label_list)
-        converted_full_label_f1_score = self._calc_f1_score(max_index_each_data=converted_full_label_list, target_label=input_batch["label"])
-        # print(f"full_label_f1_score : {converted_full_label_f1_score}")
-
         final_loss_result = sum(all_loss_result) / len(loss_fn_keys)
         # print(f"\nfinal_loss_result : {final_loss_result}\n\n")
 
         if self.mode == "train":
-            return final_loss_result, correct_cnt_each_label, f1_score_each_label, converted_full_label_f1_score
+            return final_loss_result, correct_cnt_each_label, f1_score_each_label
         else:
-            return final_loss_result, correct_cnt_each_label, f1_score_each_label, converted_full_label_f1_score, correct_each_labels, false_each_labels
+            return final_loss_result, correct_cnt_each_label, f1_score_each_label, correct_each_labels, false_each_labels

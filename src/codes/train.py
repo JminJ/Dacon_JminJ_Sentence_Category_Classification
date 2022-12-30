@@ -17,6 +17,7 @@ from electra_classifier_base_ver import SentenceCategoryClassifier as electra_cl
 from custom_dataset import SentenceCategoryDataset
 from collate_fn import MyCustomCollateFN
 from operation import ClassifierOperation
+from focal_loss import FocalLoss
 
 class Trainer:
     def __init__(self, base_ckpt:str, device:str, save_dir_path:str, args:argparse.Namespace):
@@ -61,7 +62,7 @@ class Trainer:
             print(f"\'{save_dir_path}\' is already existing.")
 
     def _wandb_init(self):
-        wandb.init(project="Dacon_Sentence_Category_classification",
+        wandb.init(project="Dacon_Sentence_Category_classification_ver2",
             config={
                 'epochs' : self.args.epochs,
                 'batch_size' : self.args.train_batch_size,
@@ -93,10 +94,16 @@ class Trainer:
         if self.args.use_weighted_loss:
             category_weight, sentiment_weight, tense_weight, certainty_weight = self.__calc_loss_weight()
 
-            category_loss_fn = nn.CrossEntropyLoss(weight=category_weight)
-            sentiment_loss_fn = nn.CrossEntropyLoss(weight=sentiment_weight)
-            tense_loss_fn = nn.CrossEntropyLoss(weight=tense_weight)
-            certainty_loss_fn = nn.CrossEntropyLoss(weight=certainty_weight)
+            if self.args.use_focal_loss:
+                category_loss_fn = FocalLoss(weight=category_weight)
+                sentiment_loss_fn = FocalLoss(weight=sentiment_weight)
+                tense_loss_fn = FocalLoss(weight=tense_weight)
+                certainty_loss_fn = FocalLoss(weight=certainty_weight)
+            else:
+                category_loss_fn = nn.CrossEntropyLoss(weight=category_weight)
+                sentiment_loss_fn = nn.CrossEntropyLoss(weight=sentiment_weight)
+                tense_loss_fn = nn.CrossEntropyLoss(weight=tense_weight)
+                certainty_loss_fn = nn.CrossEntropyLoss(weight=certainty_weight)
 
             weight_loss_fn_dict = {
                 "category" : category_loss_fn,
@@ -107,10 +114,16 @@ class Trainer:
 
             return weight_loss_fn_dict
         else:
-            category_loss_fn = nn.CrossEntropyLoss()
-            sentiment_loss_fn = nn.CrossEntropyLoss()
-            tense_loss_fn = nn.CrossEntropyLoss()
-            certainty_loss_fn = nn.CrossEntropyLoss()
+            if self.args.use_focal_loss:
+                category_loss_fn = FocalLoss()
+                sentiment_loss_fn = FocalLoss()
+                tense_loss_fn = FocalLoss()
+                certainty_loss_fn = FocalLoss()
+            else:
+                category_loss_fn = nn.CrossEntropyLoss()
+                sentiment_loss_fn = nn.CrossEntropyLoss()
+                tense_loss_fn = nn.CrossEntropyLoss()
+                certainty_loss_fn = nn.CrossEntropyLoss()
 
             loss_fn_dict = {
                 "category" : category_loss_fn,
@@ -135,26 +148,24 @@ class Trainer:
             "tense" : 0.0,
             "certainty" : 0.0
         }
-        full_label_f1_score_save_value = 0.0
 
-        return loss_save_value, correct_cnt_save_dict, f1_score_save_dict, full_label_f1_score_save_value
+        return loss_save_value, correct_cnt_save_dict, f1_score_save_dict
 
     def _train(self):
         self.operation_cls.classifier.train()
 
-        train_loss, train_each_corrects, train_each_f1_scores, train_full_label_f1_score = self._define_to_save_each_data()
+        train_loss, train_each_corrects, train_each_f1_scores = self._define_to_save_each_data()
         train_steps, train_examples = 0, 0
 
         for _, batch in enumerate(self.train_dataloader, 0):
-
-            temp_step_loss, temp_step_each_correct_cnts, temp_step_each_f1_scores, temp_step_full_label_f1_score = self.operation_cls.forward(input_batch=batch)
+            # full_label f1_score는 사용하지 않음
+            temp_step_loss, temp_step_each_correct_cnts, temp_step_each_f1_scores = self.operation_cls.forward(input_batch=batch)
 
             train_loss += temp_step_loss.item()
             for k in train_each_corrects.keys():
                 train_each_corrects[k] += temp_step_each_correct_cnts[k]
             for k in train_each_f1_scores.keys():
                 train_each_f1_scores[k] += temp_step_each_f1_scores[k]
-            train_full_label_f1_score += temp_step_full_label_f1_score
 
             train_steps += 1
             train_examples += len(batch["label"])
@@ -164,8 +175,7 @@ class Trainer:
                 "train_category_f1_score" : train_each_f1_scores["category"]/train_steps,
                 "train_sentiment_f1_score" : train_each_f1_scores["sentiment"]/train_steps,
                 "train_tense_f1_score" : train_each_f1_scores["tense"]/train_steps,
-                "train_certainty_f1_score" : train_each_f1_scores["certainty"]/train_steps,
-                "train_full_label_f1_score" : train_full_label_f1_score/train_steps
+                "train_certainty_f1_score" : train_each_f1_scores["certainty"]/train_steps
             })
 
             ## update
@@ -178,19 +188,19 @@ class Trainer:
     def _train_with_accumulation(self):
         self.operation_cls.classifier.train()
 
-        train_loss, train_each_corrects, train_each_f1_scores, train_full_label_f1_score = self._define_to_save_each_data()
+        train_loss, train_each_corrects, train_each_f1_scores = self._define_to_save_each_data()
         train_steps, train_examples = 0, 0
 
         for i, batch in enumerate(self.train_dataloader, 0):
             with torch.cuda.amp.autocast():
-                temp_step_loss, temp_step_each_correct_cnts, temp_step_each_f1_scores, temp_step_full_label_f1_score = self.operation_cls.forward(input_batch=batch)
+                # full_label f1_score는 사용하지 않음
+                temp_step_loss, temp_step_each_correct_cnts, temp_step_each_f1_scores = self.operation_cls.forward(input_batch=batch)
 
             train_loss += temp_step_loss.item()
             for k in train_each_corrects.keys():
                 train_each_corrects[k] += temp_step_each_correct_cnts[k]
             for k in train_each_f1_scores.keys():
                 train_each_f1_scores[k] += temp_step_each_f1_scores[k]
-            train_full_label_f1_score += temp_step_full_label_f1_score
 
             train_steps += 1
             train_examples += len(batch["label"])
@@ -200,8 +210,7 @@ class Trainer:
                 "train_category_f1_score" : train_each_f1_scores["category"]/ train_steps,
                 "train_sentiment_f1_score" : train_each_f1_scores["sentiment"] / train_steps,
                 "train_tense_f1_score" : train_each_f1_scores["tense"] / train_steps,
-                "train_certainty_f1_score" : train_each_f1_scores["certainty"] / train_steps,
-                "train_full_label_f1_score" : train_full_label_f1_score / train_steps
+                "train_certainty_f1_score" : train_each_f1_scores["certainty"] / train_steps
             })
 
             ## update
@@ -221,20 +230,19 @@ class Trainer:
     def _valid(self)->Tuple[int, int, Dict, Dict]:
         self.operation_cls.classifier.eval()
 
-        valid_loss, valid_each_corrects, valid_each_f1_scores, valid_full_label_f1_score = self._define_to_save_each_data()
+        valid_loss, valid_each_corrects, valid_each_f1_scores = self._define_to_save_each_data()
         valid_steps = 0
         valid_examples = 0
 
         with torch.no_grad():
             for _, batch in enumerate(self.valid_dataloader, 0):
-                temp_step_loss, temp_step_each_correct_cnts, temp_step_each_f1_scores, temp_step_full_label_f1_score = self.operation_cls.forward(input_batch=batch)
+                temp_step_loss, temp_step_each_correct_cnts, temp_step_each_f1_scores = self.operation_cls.forward(input_batch=batch)
 
                 valid_loss += temp_step_loss.item()
                 for k in valid_each_corrects.keys():
                     valid_each_corrects[k] += temp_step_each_correct_cnts[k]
                 for k in valid_each_f1_scores.keys():
                     valid_each_f1_scores[k] += temp_step_each_f1_scores[k]
-                valid_full_label_f1_score += temp_step_full_label_f1_score
 
                 valid_steps += 1
                 valid_examples += len(batch["label"])
@@ -244,8 +252,7 @@ class Trainer:
                 "valid_category_f1_score" : valid_each_f1_scores["category"] / valid_steps,
                 "valid_sentiment_f1_score" : valid_each_f1_scores["sentiment"] / valid_steps,
                 "valid_tense_f1_score" : valid_each_f1_scores["tense"] / valid_steps,
-                "valid_certainty_f1_score" : valid_each_f1_scores["certainty"] / valid_steps,
-                "valid_full_label_f1_score" : valid_full_label_f1_score / valid_steps
+                "valid_certainty_f1_score" : valid_each_f1_scores["certainty"] / valid_steps
             }
             wandb.log(valid_results)
 
