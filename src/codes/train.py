@@ -158,7 +158,6 @@ class Trainer:
         train_steps, train_examples = 0, 0
 
         for _, batch in enumerate(self.train_dataloader, 0):
-            # full_label f1_score는 사용하지 않음
             temp_step_loss, temp_step_each_correct_cnts, temp_step_each_f1_scores = self.operation_cls.forward(input_batch=batch)
 
             train_loss += temp_step_loss.item()
@@ -168,7 +167,7 @@ class Trainer:
                 train_each_f1_scores[k] += temp_step_each_f1_scores[k]
 
             train_steps += 1
-            train_examples += len(batch["label"])
+            train_examples += len(batch["category"])
 
             wandb.log({
                 "train_loss" : train_loss / train_steps,
@@ -193,7 +192,6 @@ class Trainer:
 
         for i, batch in enumerate(self.train_dataloader, 0):
             with torch.cuda.amp.autocast():
-                # full_label f1_score는 사용하지 않음
                 temp_step_loss, temp_step_each_correct_cnts, temp_step_each_f1_scores = self.operation_cls.forward(input_batch=batch)
 
             train_loss += temp_step_loss.item()
@@ -203,7 +201,7 @@ class Trainer:
                 train_each_f1_scores[k] += temp_step_each_f1_scores[k]
 
             train_steps += 1
-            train_examples += len(batch["label"])
+            train_examples += len(batch["category"])
 
             wandb.log({
                 "train_loss" : train_loss / train_steps,
@@ -225,7 +223,7 @@ class Trainer:
         Return
             - valid_examples(int) : forward에서 corrects 결과를 출력하기 위한 인자
             - valid_each_corrects(Dict) : 각 label의 correct 결과
-            - valid_results(Dict) : valid loss와 각 label, full-label의 f1-score들
+            - valid_results(Dict) : valid loss와 각 label의 f1-score
     '''
     def _valid(self)->Tuple[int, int, Dict, Dict]:
         self.operation_cls.classifier.eval()
@@ -245,7 +243,7 @@ class Trainer:
                     valid_each_f1_scores[k] += temp_step_each_f1_scores[k]
 
                 valid_steps += 1
-                valid_examples += len(batch["label"])
+                valid_examples += len(batch["category"])
             
             valid_results = {
                 "valid_loss" : valid_loss / valid_steps,
