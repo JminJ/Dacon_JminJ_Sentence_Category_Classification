@@ -49,7 +49,8 @@ class Trainer:
         if self.args.warmup_rate > 0:
             num_total_steps = len(self.train_dataloader) * args.epochs
             num_warmup_steps = self._calc_num_warmup_step(warmup_rate=args.warmup_rate, num_total_steps=num_total_steps)
-            self.learning_rate_schedular = get_cosine_schedule_with_warmup(optimizer=self.optimizer, num_warmup_steps=num_warmup_steps, num_training_steps=num_total_steps)
+            # self.learning_rate_schedular = get_cosine_schedule_with_warmup(optimizer=self.optimizer, num_warmup_steps=num_warmup_steps, num_training_steps=num_total_steps)
+            self.learning_rate_schedular = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizer, mode="min", factor=0.5, patience=2, threshold_mode="abs", min_lr=1e-08, verbose=True)
 
         self.gradscaler = GradScaler()
         self._wandb_init()
