@@ -182,8 +182,8 @@ class Trainer:
             self.optimizer.zero_grad()
             temp_step_loss.backward()
             self.optimizer.step()
-            if self.args.warmup_rate > 0:
-                self.learning_rate_schedular.step()
+            # if self.args.warmup_rate > 0:
+            #     self.learning_rate_schedular.step()
 
     def _train_with_accumulation(self):
         self.operation_cls.classifier.train()
@@ -217,8 +217,8 @@ class Trainer:
             if (i + 1) % self.args.iters_to_accumulate == 0:
                 self.gradscaler.step(self.optimizer)
                 self.gradscaler.update()
-                if self.args.warmup_rate > 0:
-                    self.learning_rate_schedular.step()
+                # if self.args.warmup_rate > 0:
+                #     self.learning_rate_schedular.step()
                 self.optimizer.zero_grad()
     '''
         Return
@@ -254,7 +254,8 @@ class Trainer:
                 "valid_certainty_f1_score" : valid_each_f1_scores["certainty"] / valid_steps
             }
             wandb.log(valid_results)
-
+        self.learning_rate_schedular.step(valid_loss/valid_steps)
+        
         return valid_examples, valid_each_corrects, valid_results
 
     def _model_ckpt_save(self, epoch:int):
