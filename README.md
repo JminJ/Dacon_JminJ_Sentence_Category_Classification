@@ -14,5 +14,8 @@
 * loss weight : True
 * loss : cross entropy
 * back translation : False
-## 대회 링크
+## 링크
+### 대회 정리 Notion 페이지
+[코드 및 EDA 등 자료](https://fern-bluebell-5e9.notion.site/AI-0385647afff7465f84b443aa440d41b2)
+### 대회 링크
 [문장 유형 분류 AI 경진대회](https://dacon.io/competitions/official/236037/overview/description)
